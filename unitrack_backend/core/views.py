@@ -1,6 +1,6 @@
 # Create your views here.
 from rest_framework import viewsets, permissions
-from .models import Materia, Grupo, Estudiante, InscripcionEstudianteGrupo, SesionClase
+from .models import Materia, Grupo, Estudiante, InscripcionEstudianteGrupo, SesionClase, AsistenciaEstudiante
 from .serializers import MateriaSerializer, GrupoSerializer, EstudianteSerializer, SesionClaseSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -50,6 +50,29 @@ class EstudianteViewSet(viewsets.ModelViewSet):
             inscripcionestudiantegrupo__grupo__materia__docente=self.request.user
         ).distinct()
 
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        grupo_id = data.pop('grupo', None)
+        # Permitir crear estudiante solo si se especifica el grupo
+        if not grupo_id:
+            return Response({'error': 'El campo grupo es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Buscar por matrícula para evitar duplicados
+        matricula = data.get('matricula') or data.get('studentId')
+        estudiante = None
+        if matricula:
+            estudiante = Estudiante.objects.filter(matricula=matricula).first()
+        if not estudiante:
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            estudiante = serializer.instance
+        # Crear inscripción si no existe
+        insc, created = InscripcionEstudianteGrupo.objects.get_or_create(
+            estudiante=estudiante,
+            grupo_id=grupo_id
+        )
+        return Response(self.get_serializer(estudiante).data, status=status.HTTP_201_CREATED)
+
 class SesionClaseViewSet(viewsets.ModelViewSet):
     queryset = SesionClase.objects.all()
     serializer_class = SesionClaseSerializer
@@ -58,6 +81,26 @@ class SesionClaseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Solo sesiones de grupos de materias del docente
         return SesionClase.objects.filter(grupo__materia__docente=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        asistencias_data = data.pop('asistencias', [])
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        sesion = serializer.instance
+        # Crear asistencias
+        for asistencia in asistencias_data:
+            estudiante_id = asistencia.get('studentId')
+            status = asistencia.get('status')
+            if estudiante_id and status:
+                AsistenciaEstudiante.objects.create(
+                    sesion_clase=sesion,
+                    estudiante_id=estudiante_id,
+                    status=status
+                )
+        headers = self.get_success_headers(serializer.data)
+        return Response(self.get_serializer(sesion).data, status=status.HTTP_201_CREATED, headers=headers)
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
