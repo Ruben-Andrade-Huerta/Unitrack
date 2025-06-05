@@ -1,0 +1,5 @@
+{
+  "name": "UniTrack",
+  "description": "A mobile-first web application for university professors in Mexico to track student attendance and manage subjects/groups. All UI is in Spanish.",
+  "requestFramePermissions": []
+}
