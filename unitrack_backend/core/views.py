@@ -100,7 +100,9 @@ class SesionClaseViewSet(viewsets.ModelViewSet):
                     status=status
                 )
         headers = self.get_success_headers(serializer.data)
-        return Response(self.get_serializer(sesion).data, status=status.HTTP_201_CREATED, headers=headers)
+        # Corregir: importar status desde rest_framework y no usar la variable local 'status'
+        from rest_framework import status as drf_status
+        return Response(self.get_serializer(sesion).data, status=drf_status.HTTP_201_CREATED, headers=headers)
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
