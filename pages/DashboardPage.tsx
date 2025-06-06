@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DataContext, DataContextType } from '../contexts/DataContext';
 import PageHeader from '../components/PageHeader';
 import BottomButton from '../components/BottomButton';
-import { Cog6ToothIcon, BookOpenIcon, ClockIcon, PlusIcon } from '../components/icons';
+import { LogoutIcon, BookOpenIcon, ClockIcon, PlusIcon } from '../components/icons';
 import { ROUTE_PATHS } from '../constants';
 import { Subject, TodayClass } from '../types';
 
@@ -27,7 +27,7 @@ const DashboardPage: React.FC = () => {
         title="UniTrack" 
         rightContent={
           <button onClick={handleSettings} title="Configuración" className="text-gray-600 hover:text-blue-600">
-            <Cog6ToothIcon className="w-7 h-7" />
+            <LogoutIcon className="w-7 h-7" />
           </button>
         }
       />
