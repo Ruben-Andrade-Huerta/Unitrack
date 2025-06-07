@@ -11,7 +11,7 @@ const LoginPage: React.FC = () => {
     console.log('LoginPage: email:', email, 'password:', password);
     if (email && password) {
       // Llamar a la API de login
-      const res = await fetch('http://localhost:8000/api/auth/login/', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }) // Cambia 'username' por 'email'
