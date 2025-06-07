@@ -29,10 +29,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const [subjects, setSubjects] = useState<Subject[]>([]);
 
+  // Cambia la URL base de la API usando variable de entorno
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
   // Reemplaza fetch por fetchWithAuthRetry en todas las llamadas protegidas
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchWithAuthRetry('http://localhost:8000/api/materias/')
+    fetchWithAuthRetry(`${API_URL}/api/materias/`)
       .then(async res => {
         if (res.status === 401) {
           logout();
@@ -51,11 +54,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchWithAuthRetry('http://localhost:8000/api/grupos/')
+    fetchWithAuthRetry(`${API_URL}/api/grupos/`)
       .then(res => res.json())
       .then(data => setGroups(data))
       .catch(() => setGroups([]));
-    fetchWithAuthRetry('http://localhost:8000/api/sesiones/')
+    fetchWithAuthRetry(`${API_URL}/api/sesiones/`)
       .then(res => res.json())
       .then(data => setSessions(data))
       .catch(() => setSessions([]));
@@ -81,7 +84,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   async function refreshAccessToken() {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) return null;
-    const res = await fetch('http://localhost:8000/api/token/refresh/', {
+    const res = await fetch(`${API_URL}/api/token/refresh/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: refreshToken })
@@ -111,7 +114,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Sobrescribe los métodos para usar la API real
   const addSubject = async (subjectData: Omit<Subject, 'id' | 'grupos'>) => {
-    const res = await fetchWithAuthRetry('http://localhost:8000/api/materias/', {
+    const res = await fetchWithAuthRetry(`${API_URL}/api/materias/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -125,7 +128,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addGroup = async (materiaId: string, groupData: Omit<Group, 'id' | 'materiaId' | 'estudiantes' | 'sesiones'>) => {
-    const res = await fetchWithAuthRetry('http://localhost:8000/api/grupos/', {
+    const res = await fetchWithAuthRetry(`${API_URL}/api/grupos/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -133,7 +136,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       body: JSON.stringify({ ...groupData, materia: materiaId })
     });
     if (res.ok) {
-      const subjectsRes = await fetchWithAuthRetry('http://localhost:8000/api/materias/');
+      const subjectsRes = await fetchWithAuthRetry(`${API_URL}/api/materias/`);
       if (subjectsRes.ok) {
         const subjectsData = await subjectsRes.json();
         setSubjects(subjectsData);
@@ -157,7 +160,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // Añadir estudiante a grupo usando la API real
   const addStudentToGroup = async (groupId: string, studentData: Omit<Student, 'id'>) => {
-    const res = await fetchWithAuthRetry(`http://localhost:8000/api/estudiantes/`, {
+    const res = await fetchWithAuthRetry(`${API_URL}/api/estudiantes/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -165,7 +168,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       body: JSON.stringify({ ...studentData, grupo: groupId })
     });
     if (res.ok) {
-      const subjectsRes = await fetchWithAuthRetry('http://localhost:8000/api/materias/');
+      const subjectsRes = await fetchWithAuthRetry(`${API_URL}/api/materias/`);
       if (subjectsRes.ok) {
         const subjectsData = await subjectsRes.json();
         setSubjects(subjectsData);
@@ -175,7 +178,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Añadir sesión a grupo usando la API real
   const addSessionToGroup = async (groupId: string, sessionData: Omit<ClassSession, 'id'>) => {
-    const res = await fetchWithAuthRetry(`http://localhost:8000/api/sesiones/`, {
+    const res = await fetchWithAuthRetry(`${API_URL}/api/sesiones/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -183,7 +186,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       body: JSON.stringify({ ...sessionData, grupo: groupId })
     });
     if (res.ok) {
-      const subjectsRes = await fetchWithAuthRetry('http://localhost:8000/api/materias/');
+      const subjectsRes = await fetchWithAuthRetry(`${API_URL}/api/materias/`);
       if (subjectsRes.ok) {
         const subjectsData = await subjectsRes.json();
         setSubjects(subjectsData);
@@ -193,7 +196,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Actualizar sesión en grupo usando la API real
   const updateSessionInGroup = async (groupId: string, updatedSession: ClassSession) => {
-    const res = await fetch(`http://localhost:8000/api/sesiones/${updatedSession.id}/`, {
+    const res = await fetch(`${API_URL}/api/sesiones/${updatedSession.id}/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
